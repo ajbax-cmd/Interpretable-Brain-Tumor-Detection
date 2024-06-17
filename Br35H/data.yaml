@@ -1,0 +1,8 @@
+train: ./Br35H/train/images
+val: ./Br35H/validate/images
+test: ./Br35H/test/images
+
+nc: 1
+names: ['tumor']
+
+
