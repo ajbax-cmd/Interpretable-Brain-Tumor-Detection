@@ -1,0 +1,6 @@
+
+train: /home/alan/Documents/YOLOV8_interpretable/Dataset_2/training/images
+val: 
+test: /home/alan/Documents/YOLOV8_interpretable/Dataset_2/testing/images
+nc: 4
+names: ['class 0', 'class 1', 'class 2', 'class 3']

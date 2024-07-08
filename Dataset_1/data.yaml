@@ -1,0 +1,8 @@
+train: /home/alan/Documents/YOLOv8_custom/Dataset_1/brain-tumor-detection-dataset/Br35H-Mask-RCNN/train/images
+val: /home/alan/Documents/YOLOv8_custom/Dataset_1/brain-tumor-detection-dataset/Br35H-Mask-RCNN/validate/images
+test: /home/alan/Documents/YOLOv8_custom/Dataset_1/brain-tumor-detection-dataset/Br35H-Mask-RCNN/test/images
+
+nc: 1
+names: ['tumor']
+
+
