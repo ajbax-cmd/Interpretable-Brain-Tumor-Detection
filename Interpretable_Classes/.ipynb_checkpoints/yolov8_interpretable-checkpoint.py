@@ -53,7 +53,7 @@ class InterpretableYOLOTest(YOLO):
         self.insert_features_into_faiss()
 
         # Calculate Pearson Correlation
-        #self.calculate_pearson_correlation()
+        self.calculate_pearson_correlation()
         print("complete")
 
     def get_features(self):
@@ -87,14 +87,17 @@ class InterpretableYOLOTest(YOLO):
             else:
                 raise ValueError(f"Unexpected number of elements in bbox: {len(bbox)}")
 
+            # Validate bounding box coordinates
+            if x_center <= 0 or x_center >= 1 or y_center <= 0 or y_center >= 1:
+                print("Invalid bounding box coordinates, skipping this image.")
+                continue
 
             # Convert from (x_center, y_center, width, height) to (x1, y1, x2, y2)
             img_width, img_height = img.size(-1), img.size(-2)
-            if((x_center <= 1 and x_center >=0) and (y_center <=1 and y_center >=0)):
-                x_center *= img_width
-                y_center *= img_height
-                width *= img_width
-                height *= img_height
+            x_center *= img_width
+            y_center *= img_height
+            width *= img_width
+            height *= img_height
 
             x1 = int(x_center - width / 2)
             y1 = int(y_center - height / 2)
@@ -104,10 +107,14 @@ class InterpretableYOLOTest(YOLO):
             # Ensure coordinates are within the image bounds
             if x1 < 0: x1 = 0
             if y1 < 0: y1 = 0
-            if x2 >     x_center *= target_width
-    y_center *= target_height
-    width *= target_width
-    height *= target_heightg = Image.new("RGB", img_pil.size, (0, 0, 0))
+            if x2 > img_width: x2 = img_width
+            if y2 > img_height: y2 = img_height
+
+            img_pil = transforms.ToPILImage()(img).convert("RGB")
+            draw = ImageDraw.Draw(img_pil)
+
+            # Create a black image
+            black_img = Image.new("RGB", img_pil.size, (0, 0, 0))
 
             # Paste the black image on the original image outside the bounding box
             draw.rectangle([0, 0, img_pil.width, y1], fill=(0, 0, 0))
@@ -123,11 +130,10 @@ class InterpretableYOLOTest(YOLO):
 
 
 
-
     def single_image_inference(self, image_path, k=5):
         self.training = False
         # Load and transform the image
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert("RGB")
         transform = transforms.Compose([
             transforms.Resize((640, 640)),
             transforms.ToTensor(),
@@ -170,9 +176,6 @@ class InterpretableYOLOTest(YOLO):
             best_confidence_score = confidence_scores[best_idx]
             best_bbox = bbox_predictions[best_idx]
 
-            # Normalize the bounding box coordinates
-            best_bbox = best_bbox / 640.0
-
             # Crop the image based on the bounding box coordinates
             cropped_image = self.crop_to_bounding_box(image, [best_bbox])
 
@@ -196,7 +199,6 @@ class InterpretableYOLOTest(YOLO):
             }
 
         return result
-
 
 
     def iterate_directory_inference(self, directory_path, k=5):

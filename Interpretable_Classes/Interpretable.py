@@ -13,7 +13,6 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import KMeans
 from interpretable_dataset import InterpretableDataset
-from feature_clusterer import FeatureClusterer
 from faiss_indexer import FaissIndexer
 
 # Class to add interpretability to pytorch models
