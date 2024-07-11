@@ -1,0 +1,28 @@
+HYPERPARAMETERS OPTIMIZED ON COCO DATASET
+______________________________________________________________________________________________________________
+YOLOv10l - 25717910 parameters
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:02<00:00,  4.92it/s]
+                   all        201        201      0.906      0.891      0.947      0.752
+                   
+                   
+YOLOv9c - 25320019 parameters
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:01<00:00,  8.28it/s]
+                   all        201        201      0.914      0.898      0.943       0.76
+                   
+
+YOLOv8m - 25840339 parameters
+ 		Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:01<00:00, 10.67it/s]
+                   all        201        201      0.929      0.891       0.94      0.762
+                   
+                   
+DEFAULT HYPERPARAMETERS
+___________________________________________________________________________________________________________________
+YOLOv10l - 25717910 parameters
+		Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:02<00:00,  4.87it/s]
+                   all        201        201      0.913      0.881      0.932      0.726
+YOLOv9c - 25320019 parameters
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:01<00:00,  8.42it/s]
+                   all        201        201      0.922      0.887       0.94      0.737
+YOLOv8m - 25840339 parameters
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100%|██████████| 13/13 [00:01<00:00, 10.75it/s]
+                   all        201        201      0.895      0.932      0.942      0.741
