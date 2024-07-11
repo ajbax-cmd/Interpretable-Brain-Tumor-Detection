@@ -76,11 +76,11 @@ class InterpretableYOLOTest(nn.Module):
                 images = images.to(self.device)
                 cropped_images = self.crop_to_bounding_box(images, labels)
                 cropped_images = cropped_images.to(self.device)
-                outputs = self.model(images)  # Forward pass with cropped images
+                img_filename, label_filename = self.train_loader.dataset.img_label_pairs[sample_idx]
+                outputs = self.model(cropped_images)  # Forward pass with cropped images
                 predictions = outputs[0] if isinstance(outputs, tuple) else outputs
                 self.predictions.extend(predictions.cpu().tolist())
-                batch_image_filenames = [os.path.basename(path) for path in self.train_loader.dataset.img_paths[sample_idx * self.train_loader.batch_size : (sample_idx + 1) * self.train_loader.batch_size]]
-                self.train_image_filenames.extend(batch_image_filenames)
+                self.train_image_filenames.append(os.path.basename(img_filename))
 
     def crop_to_bounding_box(self, images, bboxes):
         """Crop the image to the bounding box, blacking out everything outside."""
@@ -92,7 +92,6 @@ class InterpretableYOLOTest(nn.Module):
                 x_center, y_center, width, height = [float(coord) for coord in bbox]
             else:
                 raise ValueError(f"Unexpected number of elements in bbox: {len(bbox)}")
-
 
             # Convert from (x_center, y_center, width, height) to (x1, y1, x2, y2)
             img_width, img_height = img.size(-1), img.size(-2)
@@ -112,35 +111,29 @@ class InterpretableYOLOTest(nn.Module):
             if x2 > img_width: x2 = img_width
             if y2 > img_height: y2 = img_height
 
-            img_pil = transforms.ToPILImage()(img).convert("RGB")
-            draw = ImageDraw.Draw(img_pil)
+            # Create a mask for the bounding box
+            mask = torch.zeros_like(img)
+            mask[:, y1:y2, x1:x2] = 1
 
-            # Create a black image
-            black_img = Image.new("RGB", img_pil.size, (0, 0, 0))
+            # Apply the mask to black out everything outside the bounding box
+            img_cropped = img * mask
 
-            # Paste the black image on the original image outside the bounding box
-            draw.rectangle([0, 0, img_pil.width, y1], fill=(0, 0, 0))
-            draw.rectangle([0, y2, img_pil.width, img_pil.height], fill=(0, 0, 0))
-            draw.rectangle([0, y1, x1, y2], fill=(0, 0, 0))
-            draw.rectangle([x2, y1, img_pil.width, y2], fill=(0, 0, 0))
-
-            cropped_img = transforms.ToTensor()(img_pil)
-            cropped_images.append(cropped_img)
+            cropped_images.append(img_cropped)
 
         return torch.stack(cropped_images)
+
+
 
     def single_image_inference(self, image_path, k=5):
         self.training = False
         # Load and transform the image
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert('L')  # Ensure the image is grayscale
 
-        #if image.mode == 'L':
-            # Convert grayscale image to RGB by duplicating the single channel
-            #image = image.convert('RGB')
         transform = transforms.Compose([
-            transforms.Resize((640, 640)),
+            transforms.Resize((640, 640)),  # Resize to YOLOv8 input size
+            transforms.Grayscale(num_output_channels=3),  # Convert grayscale to 3-channel grayscale
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),  # Normalize for grayscale images
         ])
         image = transform(image)
         image = image.unsqueeze(0)  # Add batch dimension 
@@ -166,24 +159,34 @@ class InterpretableYOLOTest(nn.Module):
                     'distances': []
                 }
 
-  
-
             # YOLO output format: [x_center, y_center, width, height, confidence]
             best_confidence_score = prediction[4]
             best_bbox = prediction[:4]
             best_bbox = best_bbox / self.img_size  # Normalize
 
-
             # Crop the image based on the bounding box coordinates
             cropped_image = self.crop_to_bounding_box(image, [best_bbox])
+
+            # Convert the cropped image tensor to a numpy array for plotting
+            cropped_image_np = cropped_image[0].cpu().numpy().transpose(1, 2, 0)
+
+            # Denormalize the image back to 0-1 range for visualization
+            cropped_image_np = cropped_image_np * 0.5+0.5
+            cropped_image_np = np.clip(cropped_image_np, 0, 1)
+
+            # Display the cropped image
+            plt.figure(figsize=(8, 8))
+            plt.title("Inference Image Cropped")
+            plt.imshow(cropped_image_np, cmap='gray')  
+            plt.axis('off')
+            plt.show()
+
             cropped_image = cropped_image.to(self.device)
 
-            #plt image here to check cropping worked
-
             # Forward pass with the cropped image to get features from the target layer
-            #with torch.no_grad():
-            #    _ = self.model(cropped_image)  # Forward pass with cropped images
-
+            with torch.no_grad():
+               _ = self.model(cropped_image)  # Forward pass with cropped image
+            print("inference features size: ",len(self.inference_features))
             # Get features from the target layer
             inference_features = self.inference_features  # Assuming the feature extraction is set up correctly
             inference_features = inference_features.reshape(1, -1)  # Reshape if necessary
@@ -242,9 +245,10 @@ class InterpretableYOLOTest(nn.Module):
         test_img_dir = self.data_yaml['test']
 
         transform = transforms.Compose([
-            transforms.Resize(img_size),
+            transforms.Resize((640, 640)),  
+            transforms.Grayscale(num_output_channels=3),  
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
         ])
 
         train_dataset = InterpretableDataset(
@@ -296,29 +300,10 @@ class InterpretableYOLOTest(nn.Module):
         overall_correlation_score = np.mean(np.abs(correlations))
         
         #print(f"Pearson correlations for the target layer: {correlations}")
-        print(f"Overall correlation score for the target layer: {overall_correlation_score}")
+        print(f"Pearson correlation score for the target layer: {overall_correlation_score}")
 
         return overall_correlation_score
     
-    def calculate_cca_score(self):
-        # Ensure features and predictions are 2D arrays
-        assert self.features.ndim == 2, "Features should be a 2D array"
-        assert self.predictions.ndim == 3, "Predictions should be a 3D array (samples, attributes, bounding boxes)"
-
-        # Select a relevant dimension from predictions, e.g., confidence scores (5th attribute in this case)
-        selected_predictions = self.predictions[:, 4, :]  # Shape: (samples, bounding boxes)
-        selected_predictions = selected_predictions.mean(axis=1)  # Average over bounding boxes, resulting in shape: (samples,)
-
-        cca = CCA(n_components=1)
-        cca.fit(self.features, selected_predictions.reshape(-1, 1))
-        X_c, Y_c = cca.transform(self.features, selected_predictions.reshape(-1, 1))
-
-        correlation_score = np.corrcoef(X_c.T, Y_c.T)[0, 1]
-
-        print(f"CCA correlation score for the target layer: {correlation_score}")
-
-        return correlation_score
-
 
 
 def main():
