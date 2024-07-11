@@ -1,27 +1,36 @@
 import os
 import glob
-import torch
 from torch.utils.data import Dataset
 from PIL import Image
-from torchvision import transforms
 
 class InterpretableDataset(Dataset):
     def __init__(self, img_dir, label_dir, transform=None):
         self.img_dir = img_dir
         self.label_dir = label_dir
         self.transform = transform
-        self.img_paths = glob.glob(os.path.join(img_dir, '*.jpg'))
-        self.label_paths = glob.glob(os.path.join(label_dir, '*.txt'))
+
+        # Get all image and label filenames
+        img_filenames = sorted(glob.glob(os.path.join(img_dir, '*.jpg')))
+        label_filenames = sorted(glob.glob(os.path.join(label_dir, '*.txt')))
 
         # Ensure the number of images matches the number of labels
-        #assert len(self.img_paths) == len(self.label_paths), "Mismatch between images and labels count."
+        assert len(img_filenames) == len(label_filenames), "Mismatch between images and labels count."
+
+        # Match images and labels based on filename
+        self.img_label_pairs = []
+        for img_path in img_filenames:
+            base_name = os.path.basename(img_path).replace('.jpg', '')
+            label_path = os.path.join(label_dir, base_name + '.txt')
+            if os.path.exists(label_path):
+                self.img_label_pairs.append((img_path, label_path))
+            else:
+                print(f"Warning: No label found for image {img_path}")
 
     def __len__(self):
-        return len(self.img_paths)
+        return len(self.img_label_pairs)
 
     def __getitem__(self, idx):
-        img_path = self.img_paths[idx]
-        label_path = self.label_paths[idx]
+        img_path, label_path = self.img_label_pairs[idx]
 
         image = Image.open(img_path).convert("RGB")
         labels = []
