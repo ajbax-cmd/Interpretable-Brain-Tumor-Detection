@@ -220,11 +220,11 @@ class InterpretableYOLOTest(nn.Module):
             cropped_image_np = np.clip(cropped_image_np, 0, 1)
 
             # Display the cropped image
-            plt.figure(figsize=(8, 8))
-            plt.title("Inference Image Cropped")
-            plt.imshow(cropped_image_np, cmap='gray')  
-            plt.axis('off')
-            plt.show()
+            #plt.figure(figsize=(8, 8))
+            #plt.title("Inference Image Cropped")
+            #plt.imshow(cropped_image_np, cmap='gray')  
+            #plt.axis('off')
+            #plt.show()
 
             cropped_image = cropped_image.to(self.device)
 
