@@ -4,25 +4,23 @@ import yaml
 import torch
 from torch import nn
 from PIL import Image
+from scipy.stats import pearsonr
 from torchvision import models, datasets, transforms
 from torch.utils.data import DataLoader
 from PIL import Image, ImageDraw
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import CCA
-from sklearn.metrics import silhouette_score
-from sklearn.neighbors import NearestNeighbors
-from sklearn.cluster import KMeans
 from interpretable_dataset import InterpretableDataset
 from faiss_indexer import FaissIndexer
 
 # Class to add interpretability to pytorch models
 class InterpretableTest(nn.Module):
-    def __init__(self, data_yaml_path, model, weights_path=None,  batch_size=1, img_size=(224, 224)):
+    def __init__(self, data_yaml_path, model, weights_path=None,  batch_size=1, img_size=(224, 224), target_layer_index=147):
         super().__init__()
         self.model = model
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
-        self.img_size = img_size
+        self.img_size=img_size[0]
         self.data_yaml_path = data_yaml_path
         self.data_yaml = self.load_yaml(data_yaml_path)
         self.train_loader, self.val_loader, self.test_loader = self.load_data(batch_size)
@@ -46,12 +44,12 @@ class InterpretableTest(nn.Module):
 
         # Register hooks with layer index
         all_layers = self.get_all_layers(self.model)
-        print(f"Total number of layers: {len(all_layers)}")
-        self.model.avgpool.register_forward_hook(self.get_features())
+        target_layer = all_layers[target_layer_index]
+        target_layer.register_forward_hook(self.get_features())
 
         # Forward pass to collect features
         self.extract_training_features()
-        print(f"Collected features for {len(self.features)} samples from layer avgpool.")
+        print(f"Collected features for {len(self.features)} samples from layer {target_layer_index}.")
 
         # Convert features and labels to numpy arrays
         self.features = np.concatenate(self.features, axis=0)
@@ -69,6 +67,9 @@ class InterpretableTest(nn.Module):
         # Insert features into FAISS vector library
         self.insert_features_into_faiss()
 
+    def reset_features(self):
+        self.features = []
+        self.inference_features = None
 
     def load_weights(self, weights_path):
         # Load weights into the model if provided
@@ -88,14 +89,11 @@ class InterpretableTest(nn.Module):
         with torch.no_grad():
             for sample_idx, (images, labels) in enumerate(self.train_loader):
                 images = images.to(self.device)
-                outputs = self.model(images)  # Forward pass with images
-                self.labels.extend(labels) # Collect labels for class-specific clustering
-                self.predictions.extend(outputs.cpu().tolist()) 
-                batch_image_filenames = [os.path.basename(path) for path in self.train_loader.dataset.img_paths[sample_idx * self.train_loader.batch_size : (sample_idx + 1) * self.train_loader.batch_size]]
-                self.train_image_filenames.extend(batch_image_filenames)
-
-
-
+                img_filename, label_filename = self.train_loader.dataset.img_label_pairs[sample_idx]
+                outputs = self.model(images)  # Forward pass with cropped images
+                predictions = outputs[0] if isinstance(outputs, tuple) else outputs
+                self.predictions.extend(predictions.cpu().tolist())
+                self.train_image_filenames.append(os.path.basename(img_filename))
 
     def single_image_inference(self, image_path, k=5):
         """
@@ -110,11 +108,12 @@ class InterpretableTest(nn.Module):
         """
         self.training=False
         # Load and transform the image
-        image = Image.open(image_path).convert("RGB")
+        image = Image.open(image_path).convert('L')  
         transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((self.img_size, self.img_size)),  
+            transforms.Grayscale(num_output_channels=3),  # Convert grayscale to 3-channel grayscale
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),  # Normalize for grayscale images
         ])
         image = transform(image)
         image = image.unsqueeze(0)  # Add batch dimension
@@ -142,14 +141,11 @@ class InterpretableTest(nn.Module):
         # Map FAISS indices to image files
         nearest_neighbor_filenames = [self.train_image_filenames[idx] for idx in indices[0]]
         
-        
-        # Construct the result
         result = {
             'model_prediction': predicted_class,
             'nearest_neighbors': nearest_neighbor_filenames,
             'distances': distances
         }
-        
         return result
 
     def iterate_directory_inference(self, directory_path, k=5):
@@ -185,9 +181,10 @@ class InterpretableTest(nn.Module):
         test_img_dir = self.data_yaml['test']
 
         transform = transforms.Compose([
-            transforms.Resize(self.img_size),
+            transforms.Resize((self.img_size, self.img_size)),  
+            transforms.Grayscale(num_output_channels=3),  
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
         ])
 
         train_dataset = InterpretableDataset(
@@ -222,6 +219,30 @@ class InterpretableTest(nn.Module):
             layers.append(module)
         return layers
 
+    
+    def calculate_pearson_correlation(self):
+        # Ensure features are a 2D array and predictions are a 2D array (samples, classes)
+        assert self.features.ndim == 2, "Features should be a 2D array"
+        assert self.predictions.ndim == 2, "Predictions should be a 2D array (samples, classes)"
+
+        # Select the predicted class probabilities or logits (e.g., for class 0)
+        selected_predictions = self.predictions[:, 0]  # Assuming we're interested in class 0
+
+        # Calculate Pearson correlation for each feature dimension
+        correlations = []
+        for i in range(self.features.shape[1]):  # Iterate over each feature dimension
+            feature_vector = self.features[:, i]  # Shape: (num_samples,)
+            corr, _ = pearsonr(feature_vector, selected_predictions)
+            correlations.append(corr)
+
+        # Calculate the average of the absolute values of the Pearson correlations
+        overall_correlation_score = np.mean(np.abs(correlations))
+
+        print(f"Pearson correlation score for the target layer: {overall_correlation_score}")
+
+        return overall_correlation_score
+
+
 def main():
     data = '/home/alan/Documents/YOLOV8_interpretable/Dataset_2/data.yaml'
     weights = '/home/alan/Documents/YOLOV8_interpretable/ResNet50_weights/Brain_Tumor_MRI.pth'
@@ -230,12 +251,13 @@ def main():
     model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
 
     # Last Conv layer is 145
-    cnn_interpreter = InterpretableTest(data, model, weights, target_layer_index=145)
+    cnn_interpreter = InterpretableTest(data, model, weights, target_layer_index=147)
+    #cnn_interpreter.reset_features()
     # Perform inference on all images in a directory
     directory_path = '/home/alan/Documents/YOLOV8_interpretable/Dataset_2/testing/images'
-    results = cnn_interpreter.iterate_directory_inference(directory_path, k=3)
-    for result in results:
-        print(result)
+    #results = cnn_interpreter.iterate_directory_inference(directory_path, k=3)
+    #for result in results:
+        #print(result)
 
 if __name__ == "__main__":
     main()

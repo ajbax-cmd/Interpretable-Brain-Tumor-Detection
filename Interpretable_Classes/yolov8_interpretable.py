@@ -24,7 +24,7 @@ class InterpretableYOLOTest(nn.Module):
         self.img_size=img_size[0]
         self.data_yaml_path = data_yaml_path
         self.data_yaml = self.load_yaml(data_yaml_path)
-        self.train_loader, self.val_loader, self.test_loader = self.load_data(batch_size, img_size)
+        self.train_loader, self.val_loader, self.test_loader = self.load_data(batch_size)
 
         self.features = []
         self.predictions = []
@@ -122,8 +122,9 @@ class InterpretableYOLOTest(nn.Module):
 
         return torch.stack(cropped_images)
         
-    def crop_and_resize(self, images, bboxes, target_size=(640, 640)):
+    def crop_and_resize(self, images, bboxes):
         cropped_resized_images = []
+        target_size = (self.img_size, self.img_size)
         for img, bbox in zip(images, bboxes):
             if len(bbox) == 5:
                 _, x_center, y_center, width, height = [float(coord) for coord in bbox]
@@ -159,12 +160,22 @@ class InterpretableYOLOTest(nn.Module):
         return torch.stack(cropped_resized_images)
 
     def single_image_inference(self, image_path, k=5):
+        """
+        Perform inference on a single image and return the prediction and nearest neighbors.
+        
+        Parameters:
+        - image_path (str): Path to the input image.
+        - k (int): Number of nearest neighbors to retrieve from the FAISS index.
+        
+        Returns:
+        - dict: Dictionary containing the model prediction, nearest neighbors, and distances.
+        """
         self.training = False
         # Load and transform the image
         image = Image.open(image_path).convert('L')  # Ensure the image is grayscale
 
         transform = transforms.Compose([
-            transforms.Resize((640, 640)),  # Resize to YOLOv8 input size
+            transforms.Resize((self.img_size, self.img_size)),  # Resize to YOLOv8 input size
             transforms.Grayscale(num_output_channels=3),  # Convert grayscale to 3-channel grayscale
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),  # Normalize for grayscale images
@@ -243,6 +254,16 @@ class InterpretableYOLOTest(nn.Module):
         return result
 
     def iterate_directory_inference(self, directory_path, k=5):
+        """
+        Iterate through all images in a directory and perform inference on each.
+        
+        Parameters:
+        - directory_path (str): Path to the directory containing images.
+        - k (int): Number of nearest neighbors to retrieve from the FAISS index.
+        
+        Returns:
+        - list: List of dictionaries containing the model predictions, nearest neighbors, and distances for each image.
+        """
         results = []
         for filename in os.listdir(directory_path):
             if filename.endswith(".jpg") or filename.endswith(".png"):
@@ -253,7 +274,7 @@ class InterpretableYOLOTest(nn.Module):
         return results
     
     def process_output(self, output):
-        # Assuming output tensor a shape of [1, 5, 8400]
+        # For YOLOv8, Assuming output tensor a shape of [1, 5, 8400]
         output = output[0]
         highest_confidence = 0
         hc_index = 0
@@ -273,13 +294,13 @@ class InterpretableYOLOTest(nn.Module):
         with open(yaml_path, 'r') as f:
             return yaml.safe_load(f)
 
-    def load_data(self, batch_size=1, img_size=(640, 640)):
+    def load_data(self, batch_size=1):
         train_img_dir = self.data_yaml['train']
         val_img_dir = self.data_yaml['val']
         test_img_dir = self.data_yaml['test']
 
         transform = transforms.Compose([
-            transforms.Resize((640, 640)),  
+            transforms.Resize((self.img_size)),  
             transforms.Grayscale(num_output_channels=3),  
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
