@@ -17,9 +17,9 @@ We developed wrapper classes that take a trained CNN and its training set as inp
 #### Results
 We tested our approach on the YOLOv8m model using the BR35H brain tumor dataset. Our results show that layer 210, with PCA dimension reduction to 30, provides the most reliable results for identifying the most influential training images for a given inference prediction.
 
-<p float="left">
-  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/Images_and_Graphs/Duplicate_Nearest_Neighbors.png" width="500" height="400" />
-  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/Images_and_Graphs/YOLOv8_Layer_Pearson.png" width="500" height="400" />
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/Images_and_Graphs/Duplicate_Nearest_Neighbors.png" width="400" height="400" />
+  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/Images_and_Graphs/YOLOv8_Layer_Pearson.png" width="400" height="400" />
 </p>
 
 
