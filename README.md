@@ -8,6 +8,14 @@
 * [Class Files](#Class-Files)
 
 ## Overview
+This project demonstrates how to add post-hoc interpretability to Convolutional Neural Networks (CNNs) using vector libraries. By mapping the training set to the vector space of the most relevant layer, we can retrieve the k-nearest neighbors for inference images, providing insight into the model's output.
+#### Methodology
+We developed wrapper classes that take a trained CNN and its training set as inputs. These classes enable us to:
+* Map the training set to the vector space of the most relevant layer to the model's output
+* Reduce dimensionality using Principal Component Analysis (PCA)
+* Retrieve the k-nearest neighbors for inference images
+#### Results
+We tested our approach on the YOLOv8m model using the BR35H brain tumor dataset. Our results show that layer 210, with PCA dimension reduction to 30, provides the most reliable results for identifying the most influential training images for a given inference prediction.
 ## Requirements
 ## Usage
 ## Experiment Setup
