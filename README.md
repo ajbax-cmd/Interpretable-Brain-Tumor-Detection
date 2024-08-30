@@ -24,6 +24,10 @@ We tested our approach on the YOLOv8m model using the BR35H brain tumor dataset.
 
 
 ## Requirements
+Ensure the necessary dependencies are installed in your python environment.
+```
+pip install -r requirements.txt
+```
 ## Usage
 ## Experiment Setup
 ## Class Files
