@@ -58,9 +58,15 @@ k = 5 # k nearest neighbors
 result = model.single_image_inference(image_path, k=k)
 print(result)
 ```
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/prediction_results.png" width="100%" style="height: 3vh; object-fit: cover;" />
-</p>
+The output is a dictionary that contains the class, confidence score, bounding box coordinates, file names of the k-nearest neighbors from the training set, and the distance of each neighbor to the inference image.
+```
+{'model_prediction': 0,
+'confidence_score': 0.7267082929611206,
+'bounding_box': array([    0.59836,     0.30435,     0.17431,     0.14465]),
+'nearest_neighbors': ['y94.jpg', 'y318.jpg', 'y238.jpg', 'y176.jpg', 'y344.jpg'],
+'distances': array([[     28.753,      128.71,      206.51,      220.95,      244.25]],
+dtype=float32)}
+```
 
 
 
