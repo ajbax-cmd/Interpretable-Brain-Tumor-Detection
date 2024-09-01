@@ -54,10 +54,13 @@ model = InterpretableYOLOTest(data_yaml_path, model=weights, target_layer_index=
 To perform infernce on an image:
 ```python
 image_path = path/to/inference/image
-k = 6 # k nearest neighbors
+k = 5 # k nearest neighbors
 result = model.single_image_inference(image_path, k=k)
 print(result)
 ```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/prediction_results.png" width="100%" style="height: 4vh; object-fit: cover;" />
+</p>
 ## Experiment Setup
 ## Class Files
 
