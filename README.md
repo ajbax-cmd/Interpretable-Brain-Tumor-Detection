@@ -53,7 +53,7 @@ model = InterpretableYOLOTest(data_yaml_path, model=weights, target_layer_index=
 ```
 To perform infernce on an image:
 ```python
-image_path = path/to/inference/image
+image_path = 'path/to/inference/image'
 k = 6 # k nearest neighbors
 result = model.single_image_inference(image_path, k=k)
 print(result)
