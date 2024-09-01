@@ -46,8 +46,8 @@ weights_path = 'path/to/weights.pt'
 weights = torch.load(model_path)
 weights =  model['model'].float()
 weights.eval() 
-target_layer_index = 210
-pca_components = 30
+target_layer_index = 210 # default parameter value for InterpretableYOLOTest
+pca_components = 30 # default parameter value for InterpretableYOLOTest
 
 model = InterpretableYOLOTest(data_yaml_path, model=weights, target_layer_index=target_layer_index, pca_components=pca_components)
 ```
