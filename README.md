@@ -61,6 +61,9 @@ print(result)
 <p align="center">
   <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/prediction_results.png" width="100%" style="height: 4vh; object-fit: cover;" />
 </p>
+
+
+
 ## Experiment Setup
 ## Class Files
 
