@@ -29,6 +29,18 @@ Ensure the necessary dependencies are installed in your python environment.
 pip install -r requirements.txt
 ```
 ## Usage
+```python
+data_yaml_path = 'path/to/data.yaml'
+weights_path = 'path/to/weights.pt'
+model = torch.load(model_path)
+model =  model['model'].float()
+model.eval() 
+target_layer_index = 210
+pca_components = 30
+
+model = InterpretableYOLOTest(data_yaml_path, model=model, target_layer_index=target_layer_index, pca_components=pca_components)
+```
 ## Experiment Setup
 ## Class Files
+
 
