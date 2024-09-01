@@ -59,7 +59,7 @@ result = model.single_image_inference(image_path, k=k)
 print(result)
 ```
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/prediction_results.png" width="100%" style="height: 4vh; object-fit: cover;" />
+  <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/prediction_results.png" width="100%" style="height: 3vh; object-fit: cover;" />
 </p>
 
 
