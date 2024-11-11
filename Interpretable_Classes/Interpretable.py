@@ -14,9 +14,8 @@ from interpretable_dataset import InterpretableDataset
 from faiss_indexer import FaissIndexer
 
 # Class to add interpretability to pytorch models
-class InterpretableTest(nn.Module):
+class InterpretableTest:
     def __init__(self, data_yaml_path, model, weights_path=None,  batch_size=1, img_size=(224, 224), target_layer_index=147):
-        super().__init__()
         self.model = model
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
