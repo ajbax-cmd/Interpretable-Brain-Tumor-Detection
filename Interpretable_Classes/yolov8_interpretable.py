@@ -15,9 +15,8 @@ from faiss_indexer import FaissIndexer
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-class InterpretableYOLOTest(nn.Module):
+class InterpretableYOLOTest:
     def __init__(self, data_yaml_path, model, batch_size=1, img_size=(640, 640), target_layer_index=210, pca_components=30):
-        super().__init__()
         self.model = model
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
