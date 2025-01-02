@@ -1,4 +1,4 @@
-# Case-Based Interpretability in Medical Imaging: A Hybrid Approach Using Convolutional Neural Networks and Vector Libraries 
+# Interpretable AI for Medical Object Detection: A Post-Hoc Approach with YOLOv8 and FAISS
 
 ## Table of contents
 * [Overview](#overview)
