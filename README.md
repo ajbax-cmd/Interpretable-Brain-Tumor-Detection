@@ -4,8 +4,7 @@
 * [Overview](#overview)
 * [Requirements](#requirements)
 * [Usage](#usage)
-* [Experiment Setup](#experiment-setup)
-* [Class Files](#Class-Files)
+* [Paper](#Paper)
 
 ## Overview
 This project demonstrates how to add post-hoc interpretability to Convolutional Neural Networks (CNNs) using vector libraries. By mapping the training set to the vector space of the most relevant layer, we can retrieve the k-nearest neighbors for inference images, providing insight into the model's output.
@@ -15,7 +14,7 @@ This project demonstrates how to add post-hoc interpretability to Convolutional 
 </p>
 
 #### Methodology
-We developed wrapper classes that take a trained CNN and its training set as inputs. These classes enable us to:
+We developed a wrapper class that take a trained CNN (YOLOv8) and its training set as inputs. This class enable us to:
 * Map the training set to the vector space of the most relevant layer to the model's output
 * Reduce dimensionality using Principal Component Analysis (PCA)
 * Retrieve the k-nearest neighbors for inference images
@@ -73,9 +72,6 @@ The output is a dictionary that contains the class, confidence score, bounding b
 dtype=float32)}
 ```
 
-
-
-## Experiment Setup
-## Class Files
+## Paper
 
 
