@@ -9,6 +9,11 @@
 
 ## Overview
 This project demonstrates how to add post-hoc interpretability to Convolutional Neural Networks (CNNs) using vector libraries. By mapping the training set to the vector space of the most relevant layer, we can retrieve the k-nearest neighbors for inference images, providing insight into the model's output.
+
+<p align="center">
+   <img src="https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/images_and_graphs/InterpretablePipeline.drawio.png" /
+</p>
+
 #### Methodology
 We developed wrapper classes that take a trained CNN and its training set as inputs. These classes enable us to:
 * Map the training set to the vector space of the most relevant layer to the model's output
