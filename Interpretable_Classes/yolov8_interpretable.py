@@ -183,13 +183,6 @@ class InterpretableYOLOTest:
             cropped_image_np = cropped_image_np * 0.5 + 0.5
             cropped_image_np = np.clip(cropped_image_np, 0, 1)
 
-            # Display the cropped image
-            #plt.figure(figsize=(8, 8))
-            #plt.title("Inference Image Cropped")
-            #plt.imshow(cropped_image_np, cmap='gray')  
-            #plt.axis('off')
-            #plt.show()
-
             cropped_image = cropped_image.to(self.device)
 
             # Forward pass with the cropped image to get features from the target layer
@@ -313,16 +306,20 @@ class InterpretableYOLOTest:
         return overall_correlation_score
 
 def main():
-    data = '/home/alan/Documents/YOLOV8_interpretable/Dataset_1/brain-tumor-detection-dataset/Br35H-Mask-RCNN/data.yaml'
-    weights = '/home/alan/Documents/YOLOV8_interpretable/YOLOv8_weights/yolov8m_br35h.pt'
-    model = YOLO(weights)
+    '''
+    data_yaml_path = 'path/to/data.yaml'
+    weights_path = 'path/to/weights.pt'
+    weights = torch.load(model_path)
+    weights =  model['model'].float()
+    weights.eval() 
+    target_layer_index = 210 # default parameter value for InterpretableYOLOTest
+    pca_components = 30 # default parameter value for InterpretableYOLOTest
 
-    model = InterpretableYOLOTest(data, model, target_layer_index=76)
-    
-    directory_path = '/home/alan/Documents/YOLOV8_interpretable/Dataset_1/brain-tumor-detection-dataset/Br35H-Mask-RCNN/test/images'
-    #results = model.iterate_directory_inference(directory_path, k=3)
-    #for result in results:
-        #print(result)
+    model = InterpretableYOLOTest(data_yaml_path, model=weights, target_layer_index=target_layer_index, pca_components=pca_components)
 
-#if __name__ == "__main__":
-    #main()
+    image_path = 'path/to/inference/image'
+    k = 6 # k nearest neighbors
+    result = model.single_image_inference(image_path, k=k)
+    print(result)
+
+    '''
