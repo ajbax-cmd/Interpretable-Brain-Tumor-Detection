@@ -73,5 +73,5 @@ dtype=float32)}
 ```
 
 ## Paper
-
+You can find the full paper [here](https://raw.githubusercontent.com/ajbax-cmd/Interpretable-Brain-Tumor-Detection/master/paper.pdf).
 
